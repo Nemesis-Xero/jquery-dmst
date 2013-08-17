@@ -1,3 +1,36 @@
+// Just in case the browser doesn't support Array#filter()
+// Source: https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/filter
+if (!Array.prototype.filter)
+{
+	Array.prototype.filter = function(fun /*, thisp */)
+	{
+		"use strict";
+		
+		if (this == null)
+			throw new TypeError();
+		
+		var t = Object(this);
+		var len = t.length >>> 0;
+		if (typeof fun != "function")
+			throw new TypeError();
+		
+		var res = [];
+		var thisp = arguments[1];
+		for (var i = 0; i < len; i++)
+		{
+			if (i in t)
+			{
+				var val = t[i]; // in case fun mutates this
+				if (fun.call(thisp, val, i, t))
+					res.push(val);
+			}
+		}
+		
+		return res;
+	};
+}
+// End Array#filter()
+
 /*
  * Dynamic Multi-Select Tool Plugin
  */
@@ -25,6 +58,44 @@
 		
 		return obj;
 	};
+	
+	$.fn.arrayDiff = function(arr) {
+		var out = [];
+		
+		if(this && $.isArray(this))
+		{
+			if(arr && $.isArray(arr))
+			{
+				$.grep(arr, function(val) {
+					if($.inArray(val, this) == -1)
+						out.push(val);
+				});
+			}
+			else //Else return a clone
+				out = this.slice();
+		}
+		
+		return out;
+	}
+	
+	$.fn.objectDiff = function(obj) {
+		var out = {};
+		
+		if(this && $.isArray(this))
+		{
+			if(obj && $.isArray(obj))
+			{
+				$.each(obj, function(key, val) {
+					if(!this[key] || this[key] != val)
+						out[key] = val;
+				});
+			}
+			else //Else return a clone
+				out = $.extend({}, this);
+		}
+		
+		return out;
+	}
 	
 	// Private Scope -----------------------------------------------------------
 	
