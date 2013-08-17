@@ -59,44 +59,6 @@ if (!Array.prototype.filter)
 		return obj;
 	};
 	
-	$.fn.arrayDiff = function(arr) {
-		var out = [];
-		
-		if(this && $.isArray(this))
-		{
-			if(arr && $.isArray(arr))
-			{
-				$.grep(arr, function(val) {
-					if($.inArray(val, this) == -1)
-						out.push(val);
-				});
-			}
-			else //Else return a clone
-				out = this.slice();
-		}
-		
-		return out;
-	}
-	
-	$.fn.objectDiff = function(obj) {
-		var out = {};
-		
-		if(this && $.isArray(this))
-		{
-			if(obj && $.isArray(obj))
-			{
-				$.each(obj, function(key, val) {
-					if(!this[key] || this[key] != val)
-						out[key] = val;
-				});
-			}
-			else //Else return a clone
-				out = $.extend({}, this);
-		}
-		
-		return out;
-	}
-	
 	// Private Scope -----------------------------------------------------------
 	
 	var dynamicMultiSelectTool = {
@@ -120,25 +82,20 @@ if (!Array.prototype.filter)
 		selectBoxClass: 'dmstSelect',
 		
 		/**
-		 * The containing element. Typically a div.
+		 * The containing element.
 		 */
 		container: null,
 		
 		/**
 		 * Associative array of key-value pairs which represent the available options.
 		 */
-		baseSelectOptions: {},
+		baseSelectOptions: null,
 		
 		/**
 		 * The base select box element which will be cloned.
+		 * Generated in the init method.
 		 */
 		baseSelect: null,
-		
-		/**
-		 * Associative array of currently selected options. Each selection
-		 * associates an element with a value.
-		 */
-		currentlySelected: {},
 		
 		/**
 		 * Initialize the Dynamic Multi-Select object:
@@ -172,9 +129,19 @@ if (!Array.prototype.filter)
 			var self = this;
 			
 			//Add onChange handler
-			this.baseSelect.on('change', function() {
-				if($(this).find('option:selected').val() != self.nonValue.value)
-					self.cloneSelect();
+			this.baseSelect.on({
+				change: function() {
+					var prev = $(this).data('last-chosen-value');
+					
+					//Clean up select boxes first
+					self.prune();
+					
+					//Then, if this is the first change, append a new clone
+					if(!prev)
+						self.cloneSelect();
+					
+					$(this).data('last-chosen-value', $(this).find('option:selected').val());
+				}
 			});
 			
 			//Append option elements
@@ -203,12 +170,12 @@ if (!Array.prototype.filter)
 		
 		getSelectedNameValuePairs: function()
 		{
-			var nonval = this.nonValue.value;
+			var self = this;
 			var out = {};
-			$(this.container).find('.' + this.selectBoxClass).each(function(i, el) {
-				var selected = $(el).find('option:selected');
+			this.getAllSelectBoxes().each(function(i, el) {
+				var selected = self.getSelectedOption(el);
 				var val = $(selected).val();
-				if(val && val != nonval)
+				if(val && val != self.nonValue.value)
 					out[$(selected).text()] = val;
 			});
 			
@@ -227,12 +194,21 @@ if (!Array.prototype.filter)
 		{
 			var selector = '.' + this.selectBoxClass;
 			if(!(this.distinctOptions && this.baseSelectOptions.length == this.getSelectedValues().length))
-				selector += ':not(:lastchild)';
+				selector += ':not(:last-child)';
 			selector += ' option[value="' + this.nonValue.value + '"]:selected';
 			
 			$(this.container).find(selector).each(function(i, opt) {
 				$(opt).parent().remove();
 			});
+			
+			if(this.distinctOptions)
+			{
+				var self = this;
+				this.getAllSelectBoxes().each(function(i, el) {
+					self.normalizeOptions(el);
+					self.sortOptionsByValue(el);
+				});
+			}
 		},
 		
 		/**
@@ -241,9 +217,7 @@ if (!Array.prototype.filter)
 		cloneSelect: function()
 		{
 			var clone = $(this.baseSelect).clone(true, true);
-			
 			this.normalizeOptions(clone);
-			
 			$(this.container).append(clone);
 		},
 		
@@ -251,29 +225,14 @@ if (!Array.prototype.filter)
 		 * 
 		 */
 		addOption: function(element, name, value) {
-			var opt = $('<option>', {
-				name: name,
-				value: value
-			});
-			
-			$(element).append(opt);
-		},
-		
-		/**
-		 * If distinctOptions is true, trim the options of all active select boxes
-		 * such that only one of each value may be selected. Otherwise does nothing.
-		 */
-		normalizeAllOptions: function()
-		{
-			if(this.distinctOptions)
+			if($(element).find('option[value="' + value + '"]').length < 1)
 			{
-				var selectedValues = this.getSelectedValues();
-				var normalize = this.normalizeOptions;
-				$(this.container).find('.' + this.selectBoxClass).each(function(i, el) {
-					normalize(el, selectedValues);
+				var opt = $('<option>', {
+					value: value,
+					text: name
 				});
 				
-				this.prune();
+				$(element).append(opt);
 			}
 		},
 		
@@ -291,30 +250,115 @@ if (!Array.prototype.filter)
 				if(!selectedValues)
 					selectedValues = this.getSelectedValues();
 				
-				//Remove newly selected options
-				$(element).find('option').each(function(i, opt)
-				{
-					if($.inArray($(opt).val(), selectedValues) !== -1)
-						$(opt).remove();
-				});
+				//Remove newly selected options from the other select boxes
+				this.removeOptionsFromElement(element, selectedValues);
 				
 				//Detect which options are not currently selected (i.e. the options which should be displayed in the select boxes)
-				var shouldExistOptions = $(this.baseSelectOptions).objectDiff(this.getSelectedNameValuePairs());
+				var shouldExistOptions = objectDiff(this.baseSelectOptions, this.getSelectedNameValuePairs());
 				
 				//Detect the current list of options in the defined element
 				var currentOptions = {};
-				$(element).find('option').each(function(i, opt) {
+				this.getAllOptions(element).each(function(i, opt) {
 					currentOptions[$(opt).text()] = $(opt).val();
 				});
 				
 				//Calculate which options need to be added
-				var optionsToAdd = $(shouldExistOptions).objectDiff(currentOptions);
+				var optionsToAdd = objectDiff(shouldExistOptions, currentOptions);
+				if(optionsToAdd[this.nonValue.name])
+					delete optionsToAdd[this.nonValue.name];
 				
+				var self = this;
 				//Add the options to the element
 				$.each(optionsToAdd, function(key, val) {
-					this.addOption(element, key, val);
+					self.addOption(element, key, val);
+				});
+				
+				this.sortOptionsByValue(element);
+			}
+		},
+		
+		//Abstractions
+		removeOptionsFromElement: function(element, optionsToKeep)
+		{
+			this.getUnselectedOptions(element).each(function(i, opt)
+			{
+				if($.inArray($(opt).val(), optionsToKeep) != -1)
+					$(opt).remove();
+			});
+		},
+		
+		//Helper methods
+		sortOptionsByText: function(element)
+		{
+			var opts = this.getAllOptions(element).sort(function(a, b) {
+				return $(a).text().toLowerCase().localeCompare($(b).text().toLowerCase());
+			});
+			
+			this.getUnselectedOptions(element).remove();
+			$(element).append(opts);
+		},
+		
+		sortOptionsByValue: function(element)
+		{
+			var opts = this.getAllOptions(element).sort(function(a, b) {
+				return $(a).val() > $(b).val();
+			});
+			
+			this.getUnselectedOptions(element).remove();
+			$(element).append(opts);
+		},
+		
+		getAllSelectBoxes: function()
+		{
+			return $(this.container).find('.' + this.selectBoxClass);
+		},
+		
+		getSelectedOption: function(element)
+		{
+			return $(element).find('option:selected');
+		},
+		
+		getAllOptions: function(element)
+		{
+			return $(element).find('option');
+		},
+		
+		getUnselectedOptions: function(element)
+		{
+			return $(element).find('option:not(:selected)');
+		},
+		
+		getSelectedValue: function(element)
+		{
+			return $(element).find('option:selected').val();
+		}
+	};
+	
+	/**
+	 * 
+	 */
+	function objectDiff(obj1, obj2)
+	{
+		var out = {};
+		
+		if(obj1)
+		{
+			if(obj2)
+			{
+				$.each(obj1, function(key, val) {
+					if(!obj2[key])
+						out[key] = val;
+				});
+				
+				$.each(obj2, function(key, val) {
+					if(!obj1[key])
+						out[key] = val;
 				});
 			}
+			else
+				out = $.extend({}, obj1);
 		}
+		
+		return out;
 	};
 })(jQuery);
