@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Dynamic Multi-Select Tool Demo</title>
+		<script type="text/javascript" src="jquery-2.0.3.js"></script>
+		<script type="text/javascript" src="../jquery.dmst.js"></script>
+		
+		<script type="text/javascript">
+			$(document).ready(function() {
+				$('#test').dmst('create', {
+					baseSelectOptions: {
+						'Option 1': '1',
+						'Option 2': '2',
+						'Option 3': '3',
+						'Option 4': '4',
+						'Option 5': '5'
+					}
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div id="test"></div>
+	</body>
+</html>
