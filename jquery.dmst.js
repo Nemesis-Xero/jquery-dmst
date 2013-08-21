@@ -29,7 +29,8 @@
 				case 'get-selected':
 					if(instance)
 					{
-						return instance.getSelectedValues();
+						var temp = instance.getSelectedValues();
+						return temp;
 					}
 					return null;
 					break;
@@ -65,6 +66,7 @@
 	 *	<li>container - String/DOM Element - The containing element.</li>
 	 *	<li>selectOptions - object - An associative array of the full list of options.</li>
 	 *	<li>distinctOptions - bool (Default: true) - Define whether or not a single option may be selected more than once.</li>
+	 *	<li>customSelectBoxClass - String - Define one or more custom CSS classes to be applied to the select boxes.</li>
 	 * </ul>
 	 * 
 	 * @param {object} options
@@ -101,6 +103,12 @@
 		selectBoxClass: 'dmstSelect',
 		
 		/**
+		 * A string of one or more CSS classes used to allow custom styling of the
+		 * select boxes.
+		 */
+		customSelectBoxClass: '',
+		
+		/**
 		 * The containing element.
 		 */
 		container: null,
@@ -117,6 +125,13 @@
 		baseSelect: null,
 		
 		/**
+		 * Optional function to call to load the options for the base select box.
+		 * Takes one parameter, a reference to <code>this</code> object, to inject
+		 * the options directly into <code>baseSelectOptions</code>.
+		 */
+		funcLoadOptions: null,
+		
+		/**
 		 * Initialize the Dynamic Multi-Select object:
 		 * - Generate the base select box
 		 * - Clone the first select box
@@ -131,22 +146,33 @@
 				})
 			];
 			
-			$.each(this.baseSelectOptions, function(key, val) {
-				var opt = $('<option>', {
-					value: val,
-					text: key
+			if(this.funcLoadOptions)
+			{
+				this.funcLoadOptions(this);
+			}
+			
+			if(this.baseSelectOptions)
+			{
+				$.each(this.baseSelectOptions, function(key, val) {
+					var opt = $('<option>', {
+						value: val,
+						text: key
+					});
+
+					options.push(opt);
 				});
-				
-				options.push(opt);
-			});
+			}
 			
 			//Generate the select box which will be hidden and cloneable
 			this.baseSelect = $('<select>', {
-				class: this.selectBoxClass
+				class: this.selectBoxClass + ' ' + this.customSelectBoxClass
 			});
 			
-			var self = this;
+			//Append option elements
+			$(this.baseSelect).append(options);
 			
+			//Self-reference for use within the event handler.
+			var self = this;
 			//Add onChange handler
 			this.baseSelect.on({
 				change: function() {
@@ -163,9 +189,6 @@
 				}
 			});
 			
-			//Append option elements
-			$(this.baseSelect).append(options);
-			
 			//Clone the first select box
 			this.cloneSelect();
 		},
@@ -176,10 +199,11 @@
 		 */
 		getSelectedValues: function()
 		{
+			var self = this;
 			var nonval = this.nonValue.value;
 			var values = [];
 			$(this.container).find('.' + this.selectBoxClass).each(function(i, el) {
-				var val = $(el).find('option:selected').val();
+				var val = self.getSelectedValue(el);
 				if(val && val != nonval)
 					values.push(val);
 			});
@@ -187,6 +211,10 @@
 			return values;
 		},
 		
+		/**
+		 * Get all the valid selected name-value pairs of all the container's select boxes.
+		 * @returns {object}
+		 */
 		getSelectedNameValuePairs: function()
 		{
 			var self = this;
