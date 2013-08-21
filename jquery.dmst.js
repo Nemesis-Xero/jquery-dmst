@@ -33,13 +33,23 @@
 						return temp;
 					}
 					return null;
-					break;
 				case 'get-selected-pairs':
 					if(instance)
 					{
 						return instance.getSelectedNameValuePairs();
 					}
 					return null;
+				case 'set-selected':
+					if(instance && options.values)
+					{
+						instance.setSelectedValues(options.values);
+					}
+					break;
+				case 'reset':
+					if(instance)
+					{
+						instance.reset();
+					}
 					break;
 				//Default action is to create a new instance
 				case 'create':
@@ -56,7 +66,7 @@
 					
 					$(this).data($.nu.dmstDataName, obj);
 			}
-		}
+		};
 	}
 	
 	/**
@@ -64,6 +74,7 @@
 	 * Available Options:
 	 * <ul>
 	 *	<li>container - String/DOM Element - The containing element.</li>
+	 *	<li>nonValue - object - Define the <code>name</code> and <code>value</code> of the non-value option.</li>
 	 *	<li>selectOptions - object - An associative array of the full list of options.</li>
 	 *	<li>distinctOptions - bool (Default: true) - Define whether or not a single option may be selected more than once.</li>
 	 *	<li>customSelectBoxClass - String - Define one or more custom CSS classes to be applied to the select boxes.</li>
@@ -93,6 +104,8 @@
 		 * Name and value used to denote a non-value within a select box.
 		 */
 		nonValue: {
+			defaultSelectionName: 'Please Choose',
+			removeSelectionName: 'Remove',
 			name: 'None',
 			value: '-1'
 		},
@@ -100,7 +113,7 @@
 		/**
 		 * The CSS class used to denote a select box as a member of this object.
 		 */
-		selectBoxClass: 'dmstSelect',
+		selectBoxClass: 'dmst-select',
 		
 		/**
 		 * A string of one or more CSS classes used to allow custom styling of the
@@ -230,6 +243,31 @@
 		},
 		
 		/**
+		 * 
+		 * @param {array} arr
+		 */
+		setSelectedValues: function(arr)
+		{
+			this.reset();
+			
+			var self = this;
+			$.each(arr, function(i, val) {
+				self.selectNewValue(val);
+			});
+			
+			this.prune();
+		},
+		
+		/**
+		 * Clear all selections and prune down to 1 select box.
+		 */
+		reset: function()
+		{
+			this.getAllSelectBoxes().val(this.nonValue.value);
+			this.prune();
+		},
+		
+		/**
 		 * Remove select boxes from the container which meet the following conditions:
 		 * <ul>
 		 *	<li>Current value equates to the defined non-value</li>
@@ -311,6 +349,7 @@
 				
 				//Calculate which options need to be added
 				var optionsToAdd = objectDiff(shouldExistOptions, currentOptions);
+				//Remove the non-value option from optionsToAdd as this will always be present
 				if(optionsToAdd[this.nonValue.name])
 					delete optionsToAdd[this.nonValue.name];
 				
@@ -334,7 +373,14 @@
 			});
 		},
 		
-		//Helper methods
+		selectNewValue: function(value)
+		{
+			var box = this.getLastSelectBox();
+			box.val(value);
+			if(box.val() != this.nonValue.value)
+				this.cloneSelect();
+		},
+				
 		sortOptionsByText: function(element)
 		{
 			var opts = this.getAllOptions(element).sort(function(a, b) {
@@ -355,9 +401,15 @@
 			$(element).append(opts);
 		},
 		
+		//Helper methods
 		getAllSelectBoxes: function()
 		{
 			return $(this.container).find('.' + this.selectBoxClass);
+		},
+		
+		getLastSelectBox: function()
+		{
+			return this.getAllSelectBoxes().filter(':last-child');
 		},
 		
 		getSelectedOption: function(element)
@@ -383,17 +435,17 @@
 	
 	/**
 	 * 
-	 * @param {type} obj1
-	 * @param {type} obj2
-	 * @returns {unresolved}
+	 * @param {object} obj1
+	 * @param {object} obj2
+	 * @returns {object}
 	 */
 	function objectDiff(obj1, obj2)
 	{
 		var out = {};
 		
-		if(obj1)
+		if(obj1 && $.type(obj1) == 'object')
 		{
-			if(obj2)
+			if(obj2 && $.type(obj2) == 'object')
 			{
 				$.each(obj1, function(key, val) {
 					if(!obj2[key])
