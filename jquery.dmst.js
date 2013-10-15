@@ -2,6 +2,36 @@
  * Dynamic Multi-Select Tool Plugin
  */
 (function($) {
+	/**
+	 * 
+	 * @param {object} obj1
+	 * @param {object} obj2
+	 * @returns {object}
+	 */
+	function objectDiff(obj1, obj2)
+	{
+		var out = {};
+		
+		if(obj1 && $.type(obj1) == 'object')
+		{
+			if(obj2 && $.type(obj2) == 'object')
+			{
+				$.each(obj1, function(key, val) {
+					if(!obj2[key])
+						out[key] = val;
+				});
+				
+				$.each(obj2, function(key, val) {
+					if(!obj1[key])
+						out[key] = val;
+				});
+			}
+			else
+				out = $.extend({}, obj1);
+		}
+		
+		return out;
+	};
 	
 	if(!$.nu)
 		$.nu = {};
@@ -78,6 +108,7 @@
 	 *	<li>selectOptions - object - An associative array of the full list of options.</li>
 	 *	<li>distinctOptions - bool (Default: true) - Define whether or not a single option may be selected more than once.</li>
 	 *	<li>customSelectBoxClass - String - Define one or more custom CSS classes to be applied to the select boxes.</li>
+	 *	<li>funcLoadOptions - Function - Define a function to load in the available options for the base select box.</li>
 	 * </ul>
 	 * 
 	 * @param {object} options
@@ -431,36 +462,5 @@
 		{
 			return $(element).find('option:selected').val();
 		}
-	};
-	
-	/**
-	 * 
-	 * @param {object} obj1
-	 * @param {object} obj2
-	 * @returns {object}
-	 */
-	function objectDiff(obj1, obj2)
-	{
-		var out = {};
-		
-		if(obj1 && $.type(obj1) == 'object')
-		{
-			if(obj2 && $.type(obj2) == 'object')
-			{
-				$.each(obj1, function(key, val) {
-					if(!obj2[key])
-						out[key] = val;
-				});
-				
-				$.each(obj2, function(key, val) {
-					if(!obj1[key])
-						out[key] = val;
-				});
-			}
-			else
-				out = $.extend({}, obj1);
-		}
-		
-		return out;
 	};
 })(jQuery);
