@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Dynamic Multi-Select Tool - A jQuery Plugin - Developer's Guide</title>
+		
+		<link rel="stylesheet" type="text/css" media="all" href="eric-meyers-reset-css-v2.0.css" />
+		
+		<link rel="stylesheet" type="text/css" media="all" href="docs.css" />
+		
+		<link rel="stylesheet" type="text/css" media="all" href="google-code-prettify/prettify.css" />
+		<script type="text/javascript" src="google-code-prettify/prettify.js"></script>
+	</head>
+	<body onload="prettyPrint();">
+		<div class="body">
+			<h1>Dynamic Multi-Select Tool</h1>
+			<h2>A jQuery Plugin</h2>
+			
+			<h3 id="index" class="first-child">Index</h3>
+			<ol>
+				<li><a href="#summary">Summary</a></li>
+				<li><a href="#requirements">Requirements</a></li>
+				<li><a href="#demo-1">Hands-On Demo</a></li>
+				<li>
+					<a href="#example-1">Examples</a>
+					<ol>
+						<li><a href="#example-1">Example 1 - Your First DMST</a></li>
+						<li><a href="#example-2">Example 2 - jQuery Integration</a></li>
+					</ol>
+				</li>
+				<li><a href="#options">DMST Options</a></li>
+			</ol>
+			
+			<h3 id="summary">Summary</h3>
+			<p>
+				This document provides all the necessary information required to
+				successfully utilize the jquery-dmst plugin in any html page.
+			</p>
+			
+			<h3 id="requirements">Requirements</h3>
+			<p>
+				jQuery-DMST only requires jQuery, version 1.9 and above.
+			</p>
+			<ul>
+				<li><a href="http://jquery.com" target="blank">http://jquery.com</a></li>
+			</ul>
+			
+			<h3 id="demo-1">Hands-On Demo</h3>
+			<p>
+				To start off this demo, open the file &lt;DMST_PATH&gt;/test/test.html
+				in a web browser, where &lt;DMST_PATH&gt; is the path to the
+				folder containing the jquery-dmst files. A single select box
+				will be displayed.
+			</p>
+			<p>
+				Select an option and a new select box will appear to the right of
+				the first. Notice that the second select box does not contain the
+				option which you chose in the first box.
+			</p>
+			<p>
+				Continue selecting options, in any order, until all the possible
+				options have been exhausted. The final select box will only contain
+				the option <b>None</b>.
+			</p>
+			<p>
+				Choose a select box in which you selected an option and make a note
+				of which option you selected there. Now in that same select box
+				select the option <b>None</b>. Several things happen, beginning
+				with the removal of the select box you changed. Examine the remaining
+				select boxes and notice that the option you noted before now appears
+				in all the options lists.
+			</p>
+			
+			<h3 id="example-1">Example 1 - Your First DMST</h3>
+			<p>
+				Now that you are familiar with what jquery-dmst does, let's dive
+				into the code and see just how easy it is to get started. This
+				example will be walking through the code in &lt;DMST_PATH&gt;/test/test.html.
+			</p>
+			<p>
+				As jquery-dmst is a jQuery plugin, it stands to reason that we must
+				first load jQuery. Then we load jquery-dmst itself. 
+			</p>
+			<pre class="prettyprint lang-html">
+&lt;script type="text/javascript" src="jquery-2.0.3.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript" src="../jquery.dmst.js"&gt;&lt;/script&gt;
+			</pre>
+			<p>
+				We will also take advantage of another jQuery feature to ensure
+				the code is run once the page has loaded completely.
+			</p>
+			<pre class="prettyprint lang-js">
+$(document).ready(function() {
+	//Our code will go here
+});
+			</pre>
+			<p>
+				The first thing we do is disable the jQuery integration. This is
+				not necessary but test.html is specifically executing with the
+				integration disabled. We will explore the jQuery integration in
+				the next example.
+			</p>
+			<pre class="prettyprint lang-js">
+$.nu.dmstJqueryIntegration = false;
+			</pre>
+			<p>
+				In order to disable the integration, the value must explicitly
+				be set to the boolean value false. Any other value will cause
+				the jQuery integration to be enabled. 
+			</p>
+			<p>
+				Next we create an instance of the dmst object, like so:
+			</p>
+			<pre class="prettyprint lang-js">
+var tool = $.nu.dmst({
+	container: '#test',
+	baseSelectOptions: {
+		'Option 1': '1',
+		'Option 2': '2',
+		'Option 3': '3',
+		'Option 4': '4',
+		'Option 5': '5'
+	}
+});
+			</pre>
+			<p>
+				Like many jQuery plugins, the dmst function takes one parameter
+				which is an object specifying custom values for internal member
+				variables. <b>container</b> and <b>baseSelectOptions</b> are
+				required.
+			</p>
+			<p>
+				<b>container</b> - This defines the element which will
+				contain the jquery-dmst content. It can be any jQuery selector.
+				In this case it is an id selector for the element whose id is
+				'test'.
+			</p>
+			<p>
+				<b>baseSelectOptions</b> - This must be a javascript object
+				containing the desired options. The key is the display name of
+				the option while the value is the value attribute of the option.
+			</p>
+			<p>
+				For the full list of available options, see <a href="?#options">DMST Options</a>.
+			</p>
+			<p>
+				Calling this one function sets into motion the entirety of the
+				functionality.
+			</p>
+			<pre class="prettyprint lang-js">
+if(console && console.log)
+	console.log(tool);
+			</pre>
+			<p>
+				This bit of code is not required for jquery-dmst to function.
+				However, it is a quick and easy way to verify that everything
+				is as expected. You must have access to the javascript console
+				in order to see the output. 
+			</p>
+			
+			<h3 id="example-2">Example 2 - jQuery Integration</h3>
+			<p>
+				This second example is very similar to the previous one with
+				the exception of having jQuery integration enabled. It follows
+				the file &lt;DMST_PATH&gt;/test/test-integrated.html.
+			</p>
+			<p>
+				The jQuery integration refers to the ability to chain the
+				plugin function calls from a jQuery selector, like so:
+			</p>
+			<pre class="prettyprint lang-js">
+$('#test').dmst('create', {
+	baseSelectOptions: {
+		'Option 1': '1',
+		'Option 2': '2',
+		'Option 3': '3',
+		'Option 4': '4',
+		'Option 5': '5'
+	}
+});
+			</pre>
+			<p>
+				As you can see, we start by using jQuery to select the element
+				with id 'test'. Chaining, in true jQuery (and further JavaScript)
+				fashion, from that selection we call the dmst function.
+			</p>
+			<p>
+				jquery-dmst follows the jQuery plugin convention of encapsulating
+				all functionality within a single function and using an argument
+				to declare the operation the plugin should execute.
+			</p>
+			<p>
+				The first argument is a string representing the operation to be
+				executed by jquery-dmst. This argument is required.
+			</p>
+			<p>
+				The second argument is a javascript object specifying custom
+				values for internal member variables.
+			</p>
+			<p>
+				You may have noticed that the <b>container</b> value is not
+				present in the options object this time. This is because
+				jquery-dmst can infer the container element from the element
+				selected by jQuery.
+			</p>
+			<p>
+				When utilizing the jQuery integration, only <b>baseSelectOptions</b>
+				is required and it serves the same purpose with the same format
+				as in the previous example.
+			</p>
+			
+			<h3 id="options">DMST Options</h3>
+			<p>
+				
+			</p>
+		</div>
+	</body>
+</html>

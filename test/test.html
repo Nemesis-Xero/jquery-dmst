@@ -8,6 +8,15 @@
 		
 		<script type="text/javascript">
 			$(document).ready(function() {
+				/*
+				Disables the jQuery integration, so the plugin may
+				only be called by the full $.nu.dmst() function rather
+				than allowing chaining from a normal jQuery selector.
+				See test-integrated.html for an example of the jQuery
+				integration.
+				*/
+				$.nu.dmstJqueryIntegration = false;
+				
 				var tool = $.nu.dmst({
 					container: '#test',
 					baseSelectOptions: {
@@ -18,6 +27,9 @@
 						'Option 5': '5'
 					}
 				});
+				
+				if(console && console.log)
+					console.log(tool);
 			});
 		</script>
 	</head>

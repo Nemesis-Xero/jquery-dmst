@@ -1,0 +1,72 @@
+body
+{
+}
+
+div.body
+{
+	width: 50%;
+	margin: 0 auto;
+	padding-bottom: 250px;
+}
+
+b { font-weight: bold; }
+
+h1,h2,div,p,ul,li { width: 100%; }
+
+h1,h2 { text-align: center; }
+h3 { text-align: left; }
+p,ul,li { text-align: justify; }
+
+a { text-decoration: none; }
+
+/* Header */
+h1
+{
+	margin: 10px auto;
+	font-size: 2em;
+	font-weight: bold;
+}
+
+/* Sub Header */
+h2
+{
+	margin: 5px auto;
+	margin-bottom: 0px;
+	font-size: 1.8em;
+}
+
+/* Section Header */
+h3
+{
+	margin-top: 40px;
+	margin-bottom: 10px;
+	font-size: 1.6em;
+	font-weight: bold;
+}
+h3.first-child { margin-top: 10px; }
+
+/* Body Content */
+p, ol, ul, li
+{
+	margin-bottom: 15px;
+}
+p { font-size: 1.2em; }
+ol
+{
+	padding-left: 18px;
+	list-style-type: decimal;
+}
+li ol
+{
+	margin-top: 5px;
+	list-style-type: lower-alpha;
+}
+li { margin-bottom: 5px; }
+p:last-child, ol:last-child, ul:last-child, li:last-child { margin-bottom: 0px; }
+
+pre.prettyprint
+{
+	padding: 10px 15px 0px 15px !important;
+	margin-bottom: 15px;
+	text-align: left;
+}
